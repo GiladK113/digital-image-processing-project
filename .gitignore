@@ -1,10 +1,9 @@
 # Fine-tuning workspace (generated at runtime — large files)
 ft_workspace/
 
-# YOLO downloaded weights & runs
+# YOLO downloaded weights & datasets
 *.pt
 *.onnx
-runs/
 datasets/
 
 # Claude Code local settings (user-specific)
@@ -33,3 +32,4 @@ Thumbs.db
 venv/
 env/
 .venv/
+CLAUDE.md
