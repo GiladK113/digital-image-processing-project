@@ -1,0 +1,74 @@
+=== Cell 6 ===
+Loading COCO128 dataset from ultralytics...
+Error with check_dataset: No module named 'ultralytics.yolo'
+Loaded 20 images from COCO128
+Dataset loaded. Example GT boxes shape: (0, 4)
+
+
+=== Cell 12 ===
+Mean ORB keypoints on clean images: 800.0
+
+
+=== Cell 14 ===
+Mean detection recall on clean images: 1.000
+
+
+=== Cell 16 ===
+Mean edge density on clean images: 38.68060
+
+
+=== Cell 23 ===
+Evaluating distortion: GaussNoise
+
+
+=== Cell 23 ===
+  ORB: 800.0  |  Recall: 1.000  |  Edge: 93.97912
+Evaluating distortion: LowLight
+
+
+=== Cell 23 ===
+  ORB: 584.7  |  Recall: 1.000  |  Edge: 6.77710
+Evaluating distortion: Rain
+
+
+=== Cell 34 ===
+Evaluating enhancement for: GaussNoise
+
+
+=== Cell 34 ===
+  ORB: 797.2  |  Recall: 1.000  |  Edge: 34.46504
+Evaluating enhancement for: LowLight
+
+
+=== Cell 34 ===
+  ORB: 792.8  |  Recall: 1.000  |  Edge: 24.31948
+Evaluating enhancement for: Rain
+
+
+=== Cell 41 ===
+WARNING: Fine-tuned weights not found, using pretrained model
+Using pretrained model (fine-tuning weights unavailable)
+
+
+=== Cell 43 ===
+Fine-tuned recall on GaussNoise: 1.000
+
+
+=== Cell 43 ===
+Fine-tuned recall on LowLight: 1.000
+
+
+=== Cell 43 ===
+Fine-tuned recall on Rain: 1.000
+
+
+=== Cell 45 ===
+
+=== Final YOLO Detection Recall Comparison ===
+                          GaussNoise  LowLight  Rain
+Model                                               
+Pretrained (clean)             1.000     1.000 1.000
+Pretrained (distorted)         1.000     1.000 1.000
+Pretrained + Enhancement       1.000     1.000 1.000
+Fine-tuned on GaussNoise       1.000     1.000 1.000
+

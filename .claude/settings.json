@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(findstr /i \"fog haze dehaz\" README.md)",
+      "Bash(del \"c:/Users/97254/Documents/בר אילן/עיבוד ספרתי של תמונות/fix_notebook.py\")"
+    ]
+  }
+}

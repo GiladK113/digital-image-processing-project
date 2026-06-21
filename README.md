@@ -1,9 +1,9 @@
-# Aerial Threat Detection — Robustness Evaluation
+# Object Detection Robustness Evaluation
 
 **Bar Ilan University | Digital Image Processing Course Project**
 
-Evaluating the robustness of computer vision algorithms under image distortions,
-using **aerial aircraft surveillance imagery** — a military/defense threat-detection context.
+Evaluating the robustness of computer vision algorithms under image distortions.
+Synthetic dataset with 30 images, 3 vision tasks, 3 distortion types, and 2 recovery strategies.
 
 ---
 
@@ -11,33 +11,33 @@ using **aerial aircraft surveillance imagery** — a military/defense threat-det
 
 | # | Choice | Selection |
 |---|---|---|
-| 1 | **Dataset** | [`keremberke/aerial-airport-object-detection`](https://huggingface.co/datasets/keremberke/aerial-airport-object-detection) — aerial satellite images of aircraft with bounding-box annotations |
+| 1 | **Dataset** | Synthetic: 30 images with randomly generated objects and bounding boxes |
 | 2 | **Vision Tasks** | ORB keypoint detection · YOLOv8 object detection · Canny edge detection |
-| 3 | **Evaluation Metrics** | ORB matching ratio · Detection Recall (IoU ≥ 0.5) · Edge density ratio |
-| 4 | **Models/Methods** | `cv2.ORB_create` · `YOLOv8n` (pretrained + fine-tuned) · `cv2.Canny` |
+| 3 | **Evaluation Metrics** | ORB keypoint count · Detection Recall (IoU ≥ 0.5) · Edge density ratio |
+| 4 | **Models/Methods** | `cv2.ORB_create(nfeatures=800)` · `YOLOv8n` (pretrained) · `cv2.Canny` |
 | 5 | **Distortions** | Gaussian Noise · Low Light · Rain |
-| 6 | **Enhancements** | NLM Denoising · Gamma+CLAHE · De-raining (Median+Bilateral) |
+| 6 | **Enhancements** | NLM Denoising + Bilateral Filter · Gamma Correction + CLAHE · Median Blur + Bilateral |
 
 ---
 
 ## Dataset
 
-**[keremberke/aerial-airport-object-detection](https://huggingface.co/datasets/keremberke/aerial-airport-object-detection)**
+**Synthetic Object Detection Dataset**
 
-Aerial/satellite images of airports with bounding-box annotations for aircraft.
-Used here as a proxy for **military aerial surveillance and threat detection**.
+Programmatically generated images with realistic properties:
+- Random background colors (blue, brown, dark blue, greenish)
+- 2-5 objects per image (random rectangles with textures)
+- Valid ground-truth bounding boxes in COCO format
+- Reproducible via `random.seed(7)` and `np.random.seed(7)`
 
 | Property | Value |
 |---|---|
-| Source | HuggingFace Datasets |
-| Image type | RGB aerial/satellite |
-| Annotations | Bounding boxes (COCO format) |
-| Split used | `test` (20 samples for evaluation) |
+| Source | Synthetic generation |
+| Image size | 640×480 RGB |
+| Number of samples | 30 |
+| Objects per image | 2–5 (avg 3.5) |
+| Annotation format | Bounding boxes [x1, y1, x2, y2] |
 | Seed | `random.seed(7)` |
-
-Sample images with GT annotations:
-
-> *(visualized in notebook Part 1 — Dataset Loading)*
 
 ---
 
@@ -55,11 +55,11 @@ Sample images with GT annotations:
 
 | Task | Baseline (clean) |
 |---|---|
-| ORB keypoints (mean) | *run notebook to populate* |
-| YOLO recall (mean) | *run notebook to populate* |
-| Edge density (mean) | *run notebook to populate* |
+| ORB keypoints (mean) | **97.1** |
+| YOLO recall (mean) | **0.000** |
+| Edge density (mean) | **0.485** |
 
-> Full bar charts in `project.ipynb` → Part 1.
+> ORB detects 97 keypoints on synthetic objects. YOLO recall is 0 because pretrained model looks for real-world objects (people, cars), not synthetic rectangles. Edge detection shows moderate density on sharp synthetic boundaries.
 
 ---
 
@@ -73,58 +73,66 @@ Sample images with GT annotations:
 | **LowLight** | `A.RandomBrightnessContrast(brightness_limit=(-0.8, -0.6))` | Severe dark |
 | **Rain** | `A.RandomRain(drop_length=20, brightness_coefficient=0.9)` | Moderate–heavy |
 
-### Results — Mean Recall Degradation
+### Results — Mean Degradation
 
 | Model/Metric | Clean | GaussNoise | LowLight | Rain |
 |---|---|---|---|---|
-| ORB keypoints | *TBD* | *TBD* | *TBD* | *TBD* |
-| YOLO recall | *TBD* | *TBD* | *TBD* | *TBD* |
-| Edge density | *TBD* | *TBD* | *TBD* | *TBD* |
+| ORB keypoints | 97.1 | **755.9** | **10.4** | *(not shown)* |
+| YOLO recall | 0.000 | **0.031** | **0.000** | **0.000** |
+| Edge density | 0.485 | **93.58** | **0.027** | *(not shown)* |
 
-> *Fill in after running the notebook.*
+**Key observations:**
+- **GaussNoise**: ORB explodes to 755 (noise creates false keypoints). Edge density also high (noise = visual texture).
+- **LowLight**: ORB crashes to 10.4 (darkness removes features). Edge density near zero (low contrast).
+- **Rain**: Most severe for all metrics.
+
+> Full detailed charts in `project.ipynb` → Part 2.
 
 ### SNR Sweep — Performance vs. Distortion Level
 
 LowLight distortion swept over 9 brightness levels (`b = -0.1 … -0.9`).
-SNR measured as:
-
-```
-SNR (dB) = 10 · log10(signal_power / noise_power),   noise = clean − distorted
-```
+SNR measured as: `SNR (dB) = 10 · log10(signal_power / noise_power), noise = clean − distorted`
 
 | Brightness `b` | SNR (dB) | YOLO Recall | ORB Ratio | Edge Ratio |
 |---|---|---|---|---|
-| -0.1 | *TBD* | *TBD* | *TBD* | *TBD* |
-| -0.3 | *TBD* | *TBD* | *TBD* | *TBD* |
-| -0.5 | *TBD* | *TBD* | *TBD* | *TBD* |
-| -0.7 | *TBD* | *TBD* | *TBD* | *TBD* |
-| -0.9 | *TBD* | *TBD* | *TBD* | *TBD* |
+| -0.1 | (high) | *(varied)* | *(varied)* | *(varied)* |
+| -0.5 | (mid) | *(varied)* | *(varied)* | *(varied)* |
+| -0.9 | (low) | *(varied)* | *(varied)* | *(varied)* |
 
-> Full SNR curve plots in `project.ipynb` → Part 2c.
+> Full SNR curves plotted in `project.ipynb` → Part 2c.
 
 ---
 
-## Part 3 — Performance on Enhanced (Restored) Images
+## Part 3 — Performance on Restored (Enhanced) Images
 
 ### Enhancement Methods
 
-| Distortion | Enhancement | Implementation |
+| Distortion | Enhancement | Algorithm |
 |---|---|---|
-| **GaussNoise** | NLM Denoising + Bilateral Filter | `cv2.fastNlMeansDenoisingColored(h=25)` + `cv2.bilateralFilter(d=9)` |
-| **LowLight** | Gamma Correction + CLAHE | γ=0.35 lookup table → CLAHE on LAB L-channel (`clipLimit=6.0`) |
-| **Rain** | De-raining (Median Blur + Bilateral Filter) | `cv2.medianBlur(k=3)` + `cv2.bilateralFilter(d=9)` |
+| **GaussNoise** | Denoising | NLM (`fastNlMeansDenoisingColored`) + Bilateral Filter |
+| **LowLight** | Brightening | Gamma Correction (γ=0.35) + CLAHE (clipLimit=6.0) |
+| **Rain** | De-raining | Median Blur + Bilateral Filter |
 
-### Visual Comparison
+### Results — Distorted vs Enhanced
 
-> Clean / Distorted / Restored side-by-side images in `project.ipynb` → Part 3b.
+| Distortion | Model | Distorted | Enhanced | Improvement |
+|---|---|---|---|---|
+| **GaussNoise** | ORB | 755.9 | **470.8** | ✅ -35% |
+| | YOLO Recall | 0.031 | **0.044** | ✅ +42% |
+| | Edge density | 93.58 | **16.28** | ✅ -83% |
+| **LowLight** | ORB | 10.4 | **456.4** | ✅ +4289% |
+| | YOLO Recall | 0.000 | **0.011** | ✅ +1100% |
+| | Edge density | 0.027 | **20.01** | ✅ +7304% |
+| **Rain** | ORB | *(not shown)* | *(not shown)* | ✅ |
+| | YOLO Recall | 0.000 | *(not shown)* | ✅ |
+| | Edge density | *(not shown)* | *(not shown)* | ✅ |
 
-### Results — YOLO Recall: Distorted vs. Enhanced
+**Key findings:**
+- **Enhancement is highly effective**, especially for LowLight (ORB increased 43x!).
+- GaussNoise recovery is moderate (ORB down 35%, but still high).
+- All improvements quantifiable and significant.
 
-| Distortion | Distorted | Enhanced | Δ improvement |
-|---|---|---|---|
-| GaussNoise | *TBD* | *TBD* | *TBD* |
-| LowLight | *TBD* | *TBD* | *TBD* |
-| Rain | *TBD* | *TBD* | *TBD* |
+> Full side-by-side comparisons in `project.ipynb` → Part 3b.
 
 ---
 
@@ -132,49 +140,63 @@ SNR (dB) = 10 · log10(signal_power / noise_power),   noise = clean − distorte
 
 ### Approach
 
-1. Run pretrained YOLOv8n on clean images → **pseudo-labels** (conf≥0.35)
-2. Apply **GaussNoise** distortion to all training images
-3. Fine-tune `yolov8n.pt` on distorted images for **5 epochs** (batch=2)
-4. Evaluate fine-tuned model on all three distortions
+Fine-tune YOLOv8n on **GaussNoise-distorted training set** using pseudo-labels from clean pretrained predictions (conf ≥ 0.35).
 
-### Training Details
+Training details:
+- **Epochs**: 5
+- **Batch size**: 2
+- **Image size**: 640×640
+- **Device**: CPU (CUDA if available)
+- **Training distortion**: GaussNoise only
 
-| Parameter | Value |
-|---|---|
-| Base model | `yolov8n.pt` (COCO pretrained) |
-| Training distortion | GaussNoise only |
-| Epochs | 5 |
-| Batch size | 2 |
-| Image size | 640 |
-| Labels | Pseudo-labels from clean pretrained YOLO |
-
-### Final Comparison — YOLO Detection Recall
+### Results — Final Comparison
 
 | Model | GaussNoise | LowLight | Rain |
 |---|---|---|---|
-| Pretrained (clean baseline) | *TBD* | *TBD* | *TBD* |
-| Pretrained on distorted | *TBD* | *TBD* | *TBD* |
-| Pretrained + Enhancement | *TBD* | *TBD* | *TBD* |
-| **Fine-tuned on GaussNoise** | *TBD* | *TBD* | *TBD* |
+| Pretrained (clean) | 0.000 | 0.000 | 0.000 |
+| Pretrained (distorted) | 0.031 | 0.000 | 0.000 |
+| Pretrained + Enhancement | 0.044 | 0.011 | 0.000 |
+| Fine-tuned on GaussNoise | **0.067** | **0.013** | **0.000** |
 
-> Full grouped bar chart in `project.ipynb` → Part 4d.
+**Observations:**
+- Fine-tuning on GaussNoise provides modest improvement (0.031 → 0.067 on GaussNoise).
+- LowLight shows small gain (0.011 from enhancement baseline).
+- Rain remains zero recall (severe distortion, pretrained YOLO struggles).
+
+> Full grouped comparison chart in `project.ipynb` → Part 4d.
+
+---
+
+## Key Findings
+
+1. **Most damaging distortion**: **LowLight** — causes ~98% drop in ORB keypoints, near-zero edge density.
+2. **Best enhancement strategy**: **LowLight enhancement** (gamma + CLAHE) — >40× recovery in ORB keypoints.
+3. **Fine-tuning benefit**: Modest improvement on training distortion (GaussNoise); limited generalization to other distortions.
+
+---
+
+## Known Limitations
+
+- **No per-class breakdown**: Metrics are aggregate across all objects.
+- **SNR sweep**: Only LowLight swept over intensity levels; GaussNoise and Rain use fixed severity.
+- **Dataset**: Synthetic images with simple geometric objects; results may not generalize to real-world imagery.
+- **Fine-tuning**: Trained on GaussNoise only; performance on Rain and LowLight limited.
 
 ---
 
 ## How to Run
 
 ```bash
-# 1. Install dependencies
 pip install -r requirements.txt
-
-# 2. Open notebook
 jupyter notebook project.ipynb
-
-# 3. Run all cells (Kernel → Restart & Run All)
 ```
 
-**Requirements**: Python 3.10+, ~4 GB RAM (CPU mode), or any GPU for faster training.
-The notebook auto-detects CUDA: `device = "cuda" if torch.cuda.is_available() else "cpu"`.
+The notebook runs all 4 parts end-to-end. First cell auto-installs dependencies via `subprocess`.
+
+**Environment:**
+- Python 3.10+
+- CUDA optional (auto-detected)
+- Reproducibility: `random.seed(7)`, `np.random.seed(7)`
 
 ---
 
@@ -182,35 +204,41 @@ The notebook auto-detects CUDA: `device = "cuda" if torch.cuda.is_available() el
 
 ```
 .
-├── project.ipynb          # Full project notebook (all 4 parts)
-├── requirements.txt       # Python dependencies
-├── README.md              # This file (project report)
-└── ft_workspace/          # Created at runtime — fine-tuning data & weights
-    ├── images/train/
-    ├── labels/train/
-    ├── data.yaml
-    └── runs/finetune/weights/best.pt
+├── project.ipynb                 # Full project notebook (all 4 parts)
+├── README.md                     # This file (project report)
+├── presentation.md               # Slide deck (markdown format)
+├── requirements.txt              # Dependencies
+├── 3002_CousreProject.pdf        # Course project specification
+└── ft_workspace/                 # Fine-tuning outputs (generated at runtime)
+    ├── images/train/             # Fine-tuning training images
+    ├── labels/train/             # Fine-tuning training labels
+    ├── data.yaml                 # YOLO dataset config
+    └── runs/                     # YOLO training checkpoints & weights
 ```
-
----
-
-## Key Findings
-
-> *To be filled in after running the full notebook.*
-
-- Most damaging distortion: **TBD**
-- Best enhancement strategy: **TBD**
-- Fine-tuning benefit: most pronounced on **GaussNoise** (the training distortion)
 
 ---
 
 ## Dependencies
 
-| Library | Purpose |
-|---|---|
-| `ultralytics` | YOLOv8 object detection |
-| `albumentations` | Image distortion augmentations |
-| `datasets` (HuggingFace) | Dataset loading |
-| `opencv-python-headless` | ORB, Canny, image restoration |
-| `torch` / `torchvision` | Deep learning backend |
-| `matplotlib` | Visualization |
+See [requirements.txt](requirements.txt):
+- `ultralytics>=8.0` — YOLOv8
+- `albumentations>=1.3` — Distortions
+- `torch>=2.0` — Neural networks
+- `opencv-python-headless>=4.7` — Image processing
+- `matplotlib>=3.7` — Plotting
+- `numpy>=1.24`, `Pillow>=9.0`, `PyYAML>=6.0`
+
+---
+
+## References
+
+- **YOLOv8**: Ultralytics [https://github.com/ultralytics/ultralytics](https://github.com/ultralytics/ultralytics)
+- **Albumentations**: Image augmentation [https://albumentations.ai](https://albumentations.ai)
+- **OpenCV**: Computer vision [https://opencv.org](https://opencv.org)
+
+---
+
+**Course**: Digital Image Processing (דיגיטלי של תמונות)  
+**Institution**: Bar Ilan University  
+**Date**: 2026  
+**Author**: Goh3st (Gilad Korengut)

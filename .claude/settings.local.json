@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import json; nb=json.load\\(open\\(''project.ipynb'',''r'',encoding=''utf-8''\\)\\); print\\(''nbformat:'', nb.get\\(''nbformat''\\), nb.get\\(''nbformat_minor''\\)\\); print\\(''first cell keys:'', list\\(nb[''cells''][0].keys\\(\\)\\)\\)\")",
+      "Bash(python fix_notebook.py)",
+      "Bash(python -c \":*)"
+    ]
+  }
+}
