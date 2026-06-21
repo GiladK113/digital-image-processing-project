@@ -1,9 +1,21 @@
 # Fine-tuning workspace (generated at runtime — large files)
 ft_workspace/
 
-# YOLO downloaded weights
+# YOLO downloaded weights & runs
 *.pt
 *.onnx
+runs/
+datasets/
+
+# Claude Code local settings (user-specific)
+.claude/
+
+# Presentation (user uploads separately)
+presentation.md
+
+# Temporary results
+execution_results.txt
+results_synthetic.txt
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
