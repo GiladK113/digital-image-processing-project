@@ -15,8 +15,8 @@ using **aerial aircraft surveillance imagery** — a military/defense threat-det
 | 2 | **Vision Tasks** | ORB keypoint detection · YOLOv8 object detection · Canny edge detection |
 | 3 | **Evaluation Metrics** | ORB matching ratio · Detection Recall (IoU ≥ 0.5) · Edge density ratio |
 | 4 | **Models/Methods** | `cv2.ORB_create` · `YOLOv8n` (pretrained + fine-tuned) · `cv2.Canny` |
-| 5 | **Distortions** | Gaussian Noise · Low Light · Fog/Haze |
-| 6 | **Enhancements** | NLM Denoising · Gamma+CLAHE · LAB-space CLAHE Dehazing |
+| 5 | **Distortions** | Gaussian Noise · Low Light · Rain |
+| 6 | **Enhancements** | NLM Denoising · Gamma+CLAHE · De-raining (Median+Bilateral) |
 
 ---
 
@@ -71,11 +71,11 @@ Sample images with GT annotations:
 |---|---|---|
 | **GaussNoise** | `A.GaussNoise(var_limit=(500, 1500))` | Heavy |
 | **LowLight** | `A.RandomBrightnessContrast(brightness_limit=(-0.8, -0.6))` | Severe dark |
-| **Fog** | `A.RandomFog(fog_coef_lower=0.3, fog_coef_upper=0.6)` | Moderate–heavy |
+| **Rain** | `A.RandomRain(drop_length=20, brightness_coefficient=0.9)` | Moderate–heavy |
 
 ### Results — Mean Recall Degradation
 
-| Model/Metric | Clean | GaussNoise | LowLight | Fog |
+| Model/Metric | Clean | GaussNoise | LowLight | Rain |
 |---|---|---|---|---|
 | ORB keypoints | *TBD* | *TBD* | *TBD* | *TBD* |
 | YOLO recall | *TBD* | *TBD* | *TBD* | *TBD* |
@@ -112,7 +112,7 @@ SNR (dB) = 10 · log10(signal_power / noise_power),   noise = clean − distorte
 |---|---|---|
 | **GaussNoise** | NLM Denoising + Bilateral Filter | `cv2.fastNlMeansDenoisingColored(h=25)` + `cv2.bilateralFilter(d=9)` |
 | **LowLight** | Gamma Correction + CLAHE | γ=0.35 lookup table → CLAHE on LAB L-channel (`clipLimit=6.0`) |
-| **Fog** | LAB-space CLAHE Dehazing | CLAHE on LAB L-channel (`clipLimit=4.0`) |
+| **Rain** | De-raining (Median Blur + Bilateral Filter) | `cv2.medianBlur(k=3)` + `cv2.bilateralFilter(d=9)` |
 
 ### Visual Comparison
 
@@ -124,7 +124,7 @@ SNR (dB) = 10 · log10(signal_power / noise_power),   noise = clean − distorte
 |---|---|---|---|
 | GaussNoise | *TBD* | *TBD* | *TBD* |
 | LowLight | *TBD* | *TBD* | *TBD* |
-| Fog | *TBD* | *TBD* | *TBD* |
+| Rain | *TBD* | *TBD* | *TBD* |
 
 ---
 
@@ -150,7 +150,7 @@ SNR (dB) = 10 · log10(signal_power / noise_power),   noise = clean − distorte
 
 ### Final Comparison — YOLO Detection Recall
 
-| Model | GaussNoise | LowLight | Fog |
+| Model | GaussNoise | LowLight | Rain |
 |---|---|---|---|
 | Pretrained (clean baseline) | *TBD* | *TBD* | *TBD* |
 | Pretrained on distorted | *TBD* | *TBD* | *TBD* |
