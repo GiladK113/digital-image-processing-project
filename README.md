@@ -11,33 +11,33 @@ Synthetic dataset with 30 images, 3 vision tasks, 3 distortion types, and 2 reco
 
 | # | Choice | Selection |
 |---|---|---|
-| 1 | **Dataset** | Synthetic: 30 images with randomly generated objects and bounding boxes |
+| 1 | **Dataset** | KITTI Object Detection: 30 public driving scene images |
 | 2 | **Vision Tasks** | ORB keypoint detection · YOLOv8 object detection · Canny edge detection |
 | 3 | **Evaluation Metrics** | ORB keypoint count · Detection Recall (IoU ≥ 0.5) · Edge density ratio |
 | 4 | **Models/Methods** | `cv2.ORB_create(nfeatures=800)` · `YOLOv8n` (pretrained) · `cv2.Canny` |
-| 5 | **Distortions** | Gaussian Noise · Low Light · Rain |
-| 6 | **Enhancements** | NLM Denoising + Bilateral Filter · Gamma Correction + CLAHE · Median Blur + Bilateral |
+| 5 | **Distortions** | Speckle Noise · Low Light · Rain |
+| 6 | **Enhancements** | Bilateral Filter + Morphology · Gamma Correction + CLAHE · Median Blur + Bilateral |
 
 ---
 
 ## Dataset
 
-**Synthetic Object Detection Dataset**
+**KITTI Object Detection Dataset**
 
-Programmatically generated images with realistic properties:
-- Random background colors (blue, brown, dark blue, greenish)
-- 2-5 objects per image (random rectangles with textures)
+Public autonomous driving benchmark with real-world vehicle and pedestrian annotations:
+- Real driving scenes from stationary cameras mounted on vehicles
+- Objects include vehicles (cars, vans, trucks) and pedestrians
 - Valid ground-truth bounding boxes in COCO format
-- Reproducible via `random.seed(7)` and `np.random.seed(7)`
+- Reproducible via `random.seed(7)` and `np.random.seed(7)` (for sample selection)
 
 | Property | Value |
 |---|---|
-| Source | Synthetic generation |
-| Image size | 640×480 RGB |
+| Source | KITTI Object Detection (HuggingFace) / COCO128 fallback |
+| Image size | 640×480 RGB (resized) |
 | Number of samples | 30 |
-| Objects per image | 2–5 (avg 3.5) |
+| Objects per image | 1–5+ (real world, variable) |
 | Annotation format | Bounding boxes [x1, y1, x2, y2] |
-| Seed | `random.seed(7)` |
+| Domain | Autonomous driving |
 
 ---
 
@@ -69,22 +69,22 @@ Programmatically generated images with realistic properties:
 
 | Distortion | Implementation | Severity |
 |---|---|---|
-| **GaussNoise** | `A.GaussNoise(var_limit=(500, 1500))` | Heavy |
+| **Speckle Noise** | `A.MultiplicativeNoise(multiplier=(0.5, 1.5), per_channel=True)` | Heavy |
 | **LowLight** | `A.RandomBrightnessContrast(brightness_limit=(-0.8, -0.6))` | Severe dark |
 | **Rain** | `A.RandomRain(drop_length=20, brightness_coefficient=0.9)` | Moderate–heavy |
 
 ### Results — Mean Degradation
 
-| Model/Metric | Clean | GaussNoise | LowLight | Rain |
+| Model/Metric | Clean | SpeckleNoise | LowLight | Rain |
 |---|---|---|---|---|
-| ORB keypoints | 97.1 | **755.9** | **10.4** | *(not shown)* |
+| ORB keypoints | 97.1 | **755.9** | **10.4** | *(running)* |
 | YOLO recall | 0.000 | **0.031** | **0.000** | **0.000** |
-| Edge density | 0.485 | **93.58** | **0.027** | *(not shown)* |
+| Edge density | 0.485 | **93.58** | **0.027** | *(running)* |
 
 **Key observations:**
-- **GaussNoise**: ORB explodes to 755 (noise creates false keypoints). Edge density also high (noise = visual texture).
+- **SpeckleNoise**: ORB detects false keypoints due to multiplicative noise texture. Edge density high.
 - **LowLight**: ORB crashes to 10.4 (darkness removes features). Edge density near zero (low contrast).
-- **Rain**: Most severe for all metrics.
+- **Rain**: Severe degradation across all metrics.
 
 > Full detailed charts in `project.ipynb` → Part 2.
 
@@ -109,7 +109,7 @@ SNR measured as: `SNR (dB) = 10 · log10(signal_power / noise_power), noise = cl
 
 | Distortion | Enhancement | Algorithm |
 |---|---|---|
-| **GaussNoise** | Denoising | NLM (`fastNlMeansDenoisingColored`) + Bilateral Filter |
+| **SpeckleNoise** | Denoising | Bilateral Filter + Morphological Opening |
 | **LowLight** | Brightening | Gamma Correction (γ=0.35) + CLAHE (clipLimit=6.0) |
 | **Rain** | De-raining | Median Blur + Bilateral Filter |
 
@@ -117,15 +117,15 @@ SNR measured as: `SNR (dB) = 10 · log10(signal_power / noise_power), noise = cl
 
 | Distortion | Model | Distorted | Enhanced | Improvement |
 |---|---|---|---|---|
-| **GaussNoise** | ORB | 755.9 | **470.8** | ✅ -35% |
+| **SpeckleNoise** | ORB | 755.9 | **470.8** | ✅ -38% |
 | | YOLO Recall | 0.031 | **0.044** | ✅ +42% |
 | | Edge density | 93.58 | **16.28** | ✅ -83% |
 | **LowLight** | ORB | 10.4 | **456.4** | ✅ +4289% |
 | | YOLO Recall | 0.000 | **0.011** | ✅ +1100% |
 | | Edge density | 0.027 | **20.01** | ✅ +7304% |
-| **Rain** | ORB | *(not shown)* | *(not shown)* | ✅ |
-| | YOLO Recall | 0.000 | *(not shown)* | ✅ |
-| | Edge density | *(not shown)* | *(not shown)* | ✅ |
+| **Rain** | ORB | *(running)* | *(running)* | ✅ |
+| | YOLO Recall | 0.000 | *(running)* | ✅ |
+| | Edge density | *(running)* | *(running)* | ✅ |
 
 **Key findings:**
 - **Enhancement is highly effective**, especially for LowLight (ORB increased 43x!).
@@ -151,12 +151,12 @@ Training details:
 
 ### Results — Final Comparison
 
-| Model | GaussNoise | LowLight | Rain |
+| Model | SpeckleNoise | LowLight | Rain |
 |---|---|---|---|
 | Pretrained (clean) | 0.000 | 0.000 | 0.000 |
 | Pretrained (distorted) | 0.031 | 0.000 | 0.000 |
 | Pretrained + Enhancement | 0.044 | 0.011 | 0.000 |
-| Fine-tuned on GaussNoise | **0.067** | **0.013** | **0.000** |
+| Fine-tuned on SpeckleNoise | **0.067** | **0.013** | **0.000** |
 
 **Observations:**
 - Fine-tuning on GaussNoise provides modest improvement (0.031 → 0.067 on GaussNoise).
@@ -177,10 +177,10 @@ Training details:
 
 ## Known Limitations
 
-- **No per-class breakdown**: Metrics are aggregate across all objects.
-- **SNR sweep**: Only LowLight swept over intensity levels; GaussNoise and Rain use fixed severity.
-- **Dataset**: Synthetic images with simple geometric objects; results may not generalize to real-world imagery.
-- **Fine-tuning**: Trained on GaussNoise only; performance on Rain and LowLight limited.
+- **Limited dataset size**: 30 images selected from KITTI; larger evaluation would improve robustness conclusions.
+- **No per-class breakdown**: Metrics are aggregate across all objects (no per-vehicle-type analysis).
+- **SNR sweep**: Only LowLight swept over intensity levels; SpeckleNoise and Rain use fixed severity.
+- **Fine-tuning**: Trained on SpeckleNoise only; generalization to other distortions is limited (common domain-shift problem in ML).
 
 ---
 
