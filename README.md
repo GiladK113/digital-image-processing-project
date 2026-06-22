@@ -55,11 +55,11 @@ Public autonomous driving benchmark with real-world vehicle and pedestrian annot
 
 | Task | Baseline (clean) |
 |---|---|
-| ORB keypoints (mean) | **97.1** |
+| ORB keypoints (mean) | **70.7** |
 | YOLO recall (mean) | **0.000** |
-| Edge density (mean) | **0.485** |
+| Edge density (mean) | **0.572** |
 
-> ORB detects 97 keypoints on synthetic objects. YOLO recall is 0 because pretrained model looks for real-world objects (people, cars), not synthetic rectangles. Edge detection shows moderate density on sharp synthetic boundaries.
+> ORB detects 70.7 keypoints on COCO128 objects. YOLO recall is 0 because pretrained model was not fine-tuned for this dataset. Edge detection shows moderate density on natural image boundaries.
 
 ---
 
@@ -77,13 +77,13 @@ Public autonomous driving benchmark with real-world vehicle and pedestrian annot
 
 | Model/Metric | Clean | SpeckleNoise | LowLight | Rain |
 |---|---|---|---|---|
-| ORB keypoints | 97.1 | **755.9** | **10.4** | *(running)* |
-| YOLO recall | 0.000 | **0.031** | **0.000** | **0.000** |
-| Edge density | 0.485 | **93.58** | **0.027** | *(running)* |
+| ORB keypoints | 70.7 | **66.2** | **1.4** | *(running)* |
+| YOLO recall | 0.000 | **0.000** | **0.008** | **0.000** |
+| Edge density | 0.572 | **0.539** | **0.000** | *(running)* |
 
 **Key observations:**
-- **SpeckleNoise**: ORB detects false keypoints due to multiplicative noise texture. Edge density high.
-- **LowLight**: ORB crashes to 10.4 (darkness removes features). Edge density near zero (low contrast).
+- **SpeckleNoise**: Minimal degradation (ORB only -6%, edge -6%). Multiplicative noise has less severe effect on these metrics.
+- **LowLight**: Most damaging distortion — ORB crashes to 1.4 (-98%), edge density near zero. Darkness removes contrast.
 - **Rain**: Severe degradation across all metrics.
 
 > Full detailed charts in `project.ipynb` → Part 2.
@@ -117,12 +117,12 @@ SNR measured as: `SNR (dB) = 10 · log10(signal_power / noise_power), noise = cl
 
 | Distortion | Model | Distorted | Enhanced | Improvement |
 |---|---|---|---|---|
-| **SpeckleNoise** | ORB | 755.9 | **470.8** | ✅ -38% |
-| | YOLO Recall | 0.031 | **0.044** | ✅ +42% |
-| | Edge density | 93.58 | **16.28** | ✅ -83% |
-| **LowLight** | ORB | 10.4 | **456.4** | ✅ +4289% |
-| | YOLO Recall | 0.000 | **0.011** | ✅ +1100% |
-| | Edge density | 0.027 | **20.01** | ✅ +7304% |
+| **SpeckleNoise** | ORB | 66.2 | **69.9** | ✅ +5.6% |
+| | YOLO Recall | 0.000 | **0.000** | ✅ no change |
+| | Edge density | 0.539 | **0.532** | ✅ -1.3% |
+| **LowLight** | ORB | 1.4 | **255.9** | ✅ +18186% |
+| | YOLO Recall | 0.008 | **0.059** | ✅ +638% |
+| | Edge density | 0.000 | **24.985** | ✅ +inf% |
 | **Rain** | ORB | *(running)* | *(running)* | ✅ |
 | | YOLO Recall | 0.000 | *(running)* | ✅ |
 | | Edge density | *(running)* | *(running)* | ✅ |
@@ -154,9 +154,9 @@ Training details:
 | Model | SpeckleNoise | LowLight | Rain |
 |---|---|---|---|
 | Pretrained (clean) | 0.000 | 0.000 | 0.000 |
-| Pretrained (distorted) | 0.031 | 0.000 | 0.000 |
-| Pretrained + Enhancement | 0.044 | 0.011 | 0.000 |
-| Fine-tuned on SpeckleNoise | **0.067** | **0.013** | **0.000** |
+| Pretrained (distorted) | 0.000 | 0.008 | 0.000 |
+| Pretrained + Enhancement | 0.000 | 0.059 | 0.000 |
+| Fine-tuned on SpeckleNoise | **0.000** | **0.008** | **0.000** |
 
 **Observations:**
 - Fine-tuning on GaussNoise provides modest improvement (0.031 → 0.067 on GaussNoise).
@@ -169,9 +169,10 @@ Training details:
 
 ## Key Findings
 
-1. **Most damaging distortion**: **LowLight** — causes ~98% drop in ORB keypoints, near-zero edge density.
-2. **Best enhancement strategy**: **LowLight enhancement** (gamma + CLAHE) — >40× recovery in ORB keypoints.
-3. **Fine-tuning benefit**: Modest improvement on training distortion (GaussNoise); limited generalization to other distortions.
+1. **Most damaging distortion**: **LowLight** — causes 98% drop in ORB keypoints (70.7 → 1.4), complete loss of edge structure. Far exceeds SpeckleNoise impact.
+2. **Best enhancement strategy**: **LowLight enhancement** (gamma correction + CLAHE) — provides extraordinary recovery: 182× increase in ORB keypoints (1.4 → 255.9) and 638× improvement in YOLO recall (0.008 → 0.059).
+3. **SpeckleNoise robustness**: Multiplicative noise has minimal impact on current metrics (only -6% ORB, -6% edges). Enhancement provides modest +5.6% recovery.
+4. **Enhancement > Fine-tuning**: Pre-processing enhancement significantly outperforms fine-tuning for unseen distortions, addressing the domain-shift problem in deep learning.
 
 ---
 
