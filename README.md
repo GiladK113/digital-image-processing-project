@@ -55,11 +55,11 @@ Public autonomous driving benchmark with real-world vehicle and pedestrian annot
 
 | Task | Baseline (clean) |
 |---|---|
-| ORB keypoints (mean) | **70.7** |
+| ORB keypoints (mean) | **790.8** |
 | YOLO recall (mean) | **0.000** |
-| Edge density (mean) | **0.572** |
+| Edge density (mean) | **25.890** |
 
-> ORB detects 70.7 keypoints on COCO128 objects. YOLO recall is 0 because pretrained model was not fine-tuned for this dataset. Edge detection shows moderate density on natural image boundaries.
+> ORB detects 790.8 keypoints on clean COCO images. YOLO recall is 0 because ground-truth boxes are randomly placed (synthetic labels). Edge detection shows high density on natural image structure.
 
 ---
 
@@ -77,14 +77,14 @@ Public autonomous driving benchmark with real-world vehicle and pedestrian annot
 
 | Model/Metric | Clean | SpeckleNoise | LowLight | Rain |
 |---|---|---|---|---|
-| ORB keypoints | 70.7 | **66.2** | **1.4** | *(running)* |
-| YOLO recall | 0.000 | **0.000** | **0.008** | **0.000** |
-| Edge density | 0.572 | **0.539** | **0.000** | *(running)* |
+| ORB keypoints | 790.8 | **789.3** | **490.8** | **800.0** |
+| YOLO recall | 0.000 | **0.000** | **0.000** | **0.000** |
+| Edge density | 25.890 | **25.281** | **5.420** | **28.375** |
 
 **Key observations:**
-- **SpeckleNoise**: Minimal degradation (ORB only -6%, edge -6%). Multiplicative noise has less severe effect on these metrics.
-- **LowLight**: Most damaging distortion — ORB crashes to 1.4 (-98%), edge density near zero. Darkness removes contrast.
-- **Rain**: Severe degradation across all metrics.
+- **SpeckleNoise**: Minimal degradation (ORB -0.2%, edge -2.4%). Multiplicative noise has minimal impact on these algorithms.
+- **LowLight**: Most damaging distortion — ORB drops to 490.8 (-38%), edge density to 5.4 (-79%). Brightness reduction degrades detection.
+- **Rain**: Actually increases ORB slightly (+1.2%) due to added texture; edge density increases (+9.6%).
 
 > Full detailed charts in `project.ipynb` → Part 2.
 
@@ -117,20 +117,20 @@ SNR measured as: `SNR (dB) = 10 · log10(signal_power / noise_power), noise = cl
 
 | Distortion | Model | Distorted | Enhanced | Improvement |
 |---|---|---|---|---|
-| **SpeckleNoise** | ORB | 66.2 | **69.9** | ✅ +5.6% |
-| | YOLO Recall | 0.000 | **0.000** | ✅ no change |
-| | Edge density | 0.539 | **0.532** | ✅ -1.3% |
-| **LowLight** | ORB | 1.4 | **255.9** | ✅ +18186% |
-| | YOLO Recall | 0.008 | **0.059** | ✅ +638% |
-| | Edge density | 0.000 | **24.985** | ✅ +inf% |
-| **Rain** | ORB | *(running)* | *(running)* | ✅ |
-| | YOLO Recall | 0.000 | *(running)* | ✅ |
-| | Edge density | *(running)* | *(running)* | ✅ |
+| **SpeckleNoise** | ORB | 789.3 | **756.6** | -4.1% |
+| | YOLO Recall | 0.000 | **0.000** | — |
+| | Edge density | 25.281 | **11.277** | -55.4% |
+| **LowLight** | ORB | 490.8 | **754.2** | +53.7% |
+| | YOLO Recall | 0.000 | **0.000** | — |
+| | Edge density | 5.420 | **17.559** | +223.8% |
+| **Rain** | ORB | 800.0 | **800.0** | — |
+| | YOLO Recall | 0.000 | **0.000** | — |
+| | Edge density | 28.375 | **13.159** | -53.6% |
 
 **Key findings:**
-- **Enhancement is highly effective**, especially for LowLight (ORB increased 43x!).
-- GaussNoise recovery is moderate (ORB down 35%, but still high).
-- All improvements quantifiable and significant.
+- **LowLight enhancement is most effective**: Gamma correction + CLAHE recovers 53.7% of ORB keypoints and 224% of edge density.
+- **SpeckleNoise enhancement reduces edge noise**: Bilateral filter lowers spurious edges by 55.4%, though ORB slightly decreases.
+- **Rain enhancement reduces edge noise**: Median + bilateral filter cuts anomalous edges by 53.6%.
 
 > Full side-by-side comparisons in `project.ipynb` → Part 3b.
 
@@ -140,28 +140,29 @@ SNR measured as: `SNR (dB) = 10 · log10(signal_power / noise_power), noise = cl
 
 ### Approach
 
-Fine-tune YOLOv8n on **GaussNoise-distorted training set** using pseudo-labels from clean pretrained predictions (conf ≥ 0.35).
+Fine-tune YOLOv8n on **SpeckleNoise-distorted training set** using ground-truth boxes from COCO dataset.
 
 Training details:
 - **Epochs**: 5
 - **Batch size**: 2
 - **Image size**: 640×640
 - **Device**: CPU (CUDA if available)
-- **Training distortion**: GaussNoise only
+- **Training distortion**: SpeckleNoise (multiplicative noise 0.5–1.5×)
+- **Training data**: 30 images with GT boxes
 
 ### Results — Final Comparison
 
 | Model | SpeckleNoise | LowLight | Rain |
 |---|---|---|---|
 | Pretrained (clean) | 0.000 | 0.000 | 0.000 |
-| Pretrained (distorted) | 0.000 | 0.008 | 0.000 |
-| Pretrained + Enhancement | 0.000 | 0.059 | 0.000 |
-| Fine-tuned on SpeckleNoise | **0.000** | **0.008** | **0.000** |
+| Pretrained (distorted) | 0.000 | 0.000 | 0.000 |
+| Pretrained + Enhancement | 0.000 | 0.000 | 0.000 |
+| Fine-tuned on SpeckleNoise | **0.000** | **0.000** | **0.000** |
 
 **Observations:**
-- Fine-tuning on GaussNoise provides modest improvement (0.031 → 0.067 on GaussNoise).
-- LowLight shows small gain (0.011 from enhancement baseline).
-- Rain remains zero recall (severe distortion, pretrained YOLO struggles).
+- All YOLO detection recall values remain zero across all conditions.
+- Ground-truth boxes were randomly placed (synthetic labels) and do not match natural object distributions.
+- Fine-tuning did not improve detection on any distortion, likely due to synthetic GT box mismatch with pretrained model expectations.
 
 > Full grouped comparison chart in `project.ipynb` → Part 4d.
 
@@ -169,19 +170,21 @@ Training details:
 
 ## Key Findings
 
-1. **Most damaging distortion**: **LowLight** — causes 98% drop in ORB keypoints (70.7 → 1.4), complete loss of edge structure. Far exceeds SpeckleNoise impact.
-2. **Best enhancement strategy**: **LowLight enhancement** (gamma correction + CLAHE) — provides extraordinary recovery: 182× increase in ORB keypoints (1.4 → 255.9) and 638× improvement in YOLO recall (0.008 → 0.059).
-3. **SpeckleNoise robustness**: Multiplicative noise has minimal impact on current metrics (only -6% ORB, -6% edges). Enhancement provides modest +5.6% recovery.
-4. **Enhancement > Fine-tuning**: Pre-processing enhancement significantly outperforms fine-tuning for unseen distortions, addressing the domain-shift problem in deep learning.
+1. **Most damaging distortion**: **LowLight** — causes 38% drop in ORB keypoints (790.8 → 490.8) and 79% loss of edge structure (25.89 → 5.42). Substantially worse than SpeckleNoise.
+2. **Best enhancement strategy**: **LowLight enhancement** (gamma correction γ=0.35 + CLAHE clipLimit=6.0) — achieves 53.7% recovery of ORB keypoints (490.8 → 754.2) and 223.8% recovery of edge density (5.42 → 17.56).
+3. **SpeckleNoise has minimal impact**: Multiplicative noise (0.5–1.5×) causes <2% degradation in ORB and ORB keypoints. This represents robustness to realistic sensor noise.
+4. **Rain increases texture**: Surprisingly, rain distortion increases ORB keypoints by 1.2% and edge density by 9.6%, likely due to added texture from water droplets.
+5. **Synthetic GT boxes limit YOLO learning**: Fine-tuning achieves zero detection recall across all conditions, indicating the synthetic box placement does not represent natural object distributions.
 
 ---
 
 ## Known Limitations
 
-- **Limited dataset size**: 30 images selected from KITTI; larger evaluation would improve robustness conclusions.
-- **No per-class breakdown**: Metrics are aggregate across all objects (no per-vehicle-type analysis).
-- **SNR sweep**: Only LowLight swept over intensity levels; SpeckleNoise and Rain use fixed severity.
-- **Fine-tuning**: Trained on SpeckleNoise only; generalization to other distortions is limited (common domain-shift problem in ML).
+- **Synthetic ground-truth boxes**: YOLO evaluation uses randomly-placed synthetic bounding boxes rather than real COCO annotations. This explains zero detection recall even in clean images and prevents meaningful YOLO fine-tuning.
+- **Limited dataset size**: 30 images from COCO val2017; larger evaluation would improve statistical robustness of conclusions.
+- **No per-class breakdown**: Metrics are aggregate across all distortions/enhancements (no fine-grained per-distortion analysis).
+- **SNR sweep scope**: Only LowLight distortion swept over intensity levels (-0.1 to -0.9 brightness). SpeckleNoise and Rain use fixed severity settings.
+- **Single random seed**: Results from `random.seed(7)` and `np.random.seed(7)`; multiple seeds would provide confidence intervals.
 
 ---
 

@@ -1,5 +1,10 @@
 # Fine-tuning workspace (generated at runtime — large files)
 ft_workspace/
+runs/
+
+# COCO dataset (large, downloaded at runtime)
+val2017/
+coco_val2017.zip
 
 # YOLO downloaded weights & datasets
 *.pt
