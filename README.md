@@ -245,4 +245,4 @@ See [requirements.txt](requirements.txt):
 **Course**: Digital Image Processing (דיגיטלי של תמונות)  
 **Institution**: Bar Ilan University  
 **Date**: 2026  
-**Author**: Goh3st (Gilad Korengut)
+**Author**: (Gilad Korengut)
