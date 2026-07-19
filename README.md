@@ -242,7 +242,6 @@ pip install -r requirements.txt
 jupyter notebook project.ipynb
 ```
 
-The notebook runs all 4 parts end-to-end. First cell auto-installs dependencies via `subprocess`.
 
 **Environment:**
 - Python 3.10+
