@@ -283,8 +283,11 @@ See [requirements.txt](requirements.txt):
 ## References
 
 - **YOLOv8**: Ultralytics [https://github.com/ultralytics/ultralytics](https://github.com/ultralytics/ultralytics)
+- **SegFormer**: Xie et al., NeurIPS 2021 — [https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512](https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512)
 - **Albumentations**: Image augmentation [https://albumentations.ai](https://albumentations.ai)
-- **OpenCV**: Computer vision [https://opencv.org](https://opencv.org)
+- **OpenCV**: Computer vision (ORB, Canny) [https://opencv.org](https://opencv.org)
+- **COCO val2017**: Lin et al. — [https://cocodataset.org](https://cocodataset.org)
+
 
 ---
 
