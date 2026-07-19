@@ -233,8 +233,6 @@ Training details:
 - **Limited dataset size**: 30 images from COCO val2017; larger evaluation would improve statistical robustness of conclusions.
 - **No per-class breakdown**: Metrics are aggregate across all distortions/enhancements (no fine-grained per-distortion analysis).
 - **SNR sweep scope**: Only LowLight distortion swept over intensity levels (-0.1 to -0.9 brightness). SpeckleNoise and Rain use fixed severity settings.
-- **Single random seed**: Results from `random.seed(7)` and `np.random.seed(7)`; multiple seeds would provide confidence intervals.
-- **Semantic segmentation reference**: SegFormer-B0 evaluated in pretrained form only (fine-tuning would require pixel-level ADE20K-style masks, unavailable from COCO's bounding-box annotations). mIoU is computed against the model's own clean-image prediction (not a manually-annotated mask), so it measures *prediction stability under distortion* rather than absolute segmentation accuracy.
 - **Fine-tuning failure mode**: YOLO fine-tuning (Part 4) used only 5 epochs on 29 images and resulted in catastrophic recall collapse (0.033) on all distortions — this reflects a genuine low-data training limitation, not a representative result for what proper fine-tuning (more epochs/data) could achieve.
 
 ---
