@@ -231,9 +231,7 @@ Training details:
 
 - **YOLO ground-truth boxes**: YOLO evaluation uses YOLO pseudo-labels (predictions on clean images at conf≥0.3) rather than manual annotations. Enables meaningful evaluation but introduces baseline dependency.
 - **Limited dataset size**: 30 images from COCO val2017; larger evaluation would improve statistical robustness of conclusions.
-- **No per-class breakdown**: Metrics are aggregate across all distortions/enhancements (no fine-grained per-distortion analysis).
 - **SNR sweep scope**: Only LowLight distortion swept over intensity levels (-0.1 to -0.9 brightness). SpeckleNoise and Rain use fixed severity settings.
-- **Fine-tuning failure mode**: YOLO fine-tuning (Part 4) used only 5 epochs on 29 images and resulted in catastrophic recall collapse (0.033) on all distortions — this reflects a genuine low-data training limitation, not a representative result for what proper fine-tuning (more epochs/data) could achieve.
 
 ---
 
@@ -249,7 +247,6 @@ The notebook runs all 4 parts end-to-end. First cell auto-installs dependencies 
 **Environment:**
 - Python 3.10+
 - CUDA optional (auto-detected)
-- Reproducibility: `random.seed(7)`, `np.random.seed(7)`
 
 ---
 
@@ -259,15 +256,11 @@ The notebook runs all 4 parts end-to-end. First cell auto-installs dependencies 
 .
 ├── project.ipynb                 # Full project notebook (all 4 parts)
 ├── README.md                     # This file (project report)
-├── presentation.md               # Slide deck (markdown format)
 ├── requirements.txt              # Dependencies
-├── 3002_CousreProject.pdf        # Course project specification
+├── Vision_Algorithm_Project.pdf  # Course project presentation (PDF format)
+├── Vision_Algorithm_Project.pptx # Course project presentation (PPTX format)
 ├── assets/                       # Result images embedded in this README (extracted from the notebook)
-└── ft_workspace/                 # Fine-tuning outputs (generated at runtime)
-    ├── images/train/             # Fine-tuning training images
-    ├── labels/train/             # Fine-tuning training labels
-    ├── data.yaml                 # YOLO dataset config
-    └── runs/                     # YOLO training checkpoints & weights
+
 ```
 
 ---
@@ -278,9 +271,12 @@ See [requirements.txt](requirements.txt):
 - `ultralytics>=8.0` — YOLOv8
 - `albumentations>=1.3` — Distortions
 - `torch>=2.0` — Neural networks
+- `transformers>=4.30` — SegFormer-B0 (semantic segmentation)
 - `opencv-python-headless>=4.7` — Image processing
 - `matplotlib>=3.7` — Plotting
+- `pandas>=2.0` — Results tables (Part 4 comparison)
 - `numpy>=1.24`, `Pillow>=9.0`, `PyYAML>=6.0`
+
 
 ---
 
