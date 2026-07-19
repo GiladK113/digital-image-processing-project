@@ -30,7 +30,7 @@ Real-world natural images from the COCO validation set, loaded locally from a `v
 
 | Property | Value |
 |---|---|
-| Source | COCO val2017 (local `val2017/*.jpg`, first 30 files) |
+| Source | COCO val2017 (local `val2017/*.jpg`, first 30 files) - [Link to val2017 ZIP file](https://drive.google.com/drive/folders/1DybZUW2d-QxmbEfiTSXHzo8mnuAyrbXY?usp=sharing) |
 | Image size | 640×480 RGB (resized) |
 | Number of samples | 30 (29 with ≥1 detected object) |
 | Objects per image | 4.20 average (YOLO pseudo-label detections) |
