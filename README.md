@@ -27,7 +27,6 @@ Real dataset with 30 COCO images, 4 vision tasks, 3 distortion types, and 2 reco
 Real-world natural images from the COCO validation set, loaded locally from a `val2017/` directory:
 - 30 real photographic scenes (people, vehicles, everyday objects)
 - Ground-truth boxes are **YOLO pseudo-labels**: predictions from pretrained YOLOv8n on the clean images (conf≥0.3), used as GT since manual COCO-category annotations aren't loaded — see [Known Limitations](#known-limitations)
-- Falls back to synthetic procedurally-generated images only if `val2017/` images fail to load
 - Reproducible via `random.seed(7)` and `np.random.seed(7)`
 
 | Property | Value |
